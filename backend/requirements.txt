@@ -1,6 +1,4 @@
 fastapi
 uvicorn
-google-cloud-firestore
-firebase-admin
+sqlalchemy
 pydantic
-python-dotenv

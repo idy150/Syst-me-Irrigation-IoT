@@ -1,25 +1,16 @@
-from firebase_config import db
-import time
+def irrigation_decision(soil_moisture: float) -> dict:
+    """
+    Soil moisture scale: 0 (dry) → 100 (wet)
+    Pump ON if soil moisture < 30
+    """
 
-def irrigation_loop():
-    while True:
-        sensor_doc = db.collection("sensors").document("device_1").get().to_dict()
-        commands_doc = db.collection("commands").document("device_1").get().to_dict()
-
-        humidity = sensor_doc["humidity"]
-        threshold = commands_doc["threshold"]
-
-        if humidity < threshold:
-            db.collection("commands").document("device_1").update({
-                "pump_status": "on"
-            })
-        else:
-            db.collection("commands").document("device_1").update({
-                "pump_status": "off"
-            })
-
-        time.sleep(5)
-
-
-if __name__ == "__main__":
-    irrigation_loop()
+    if soil_moisture < 30:
+        return {
+            "pump": True,
+            "message": "Soil dry → Pump activated"
+        }
+    else:
+        return {
+            "pump": False,
+            "message": "Soil moisture sufficient → Pump OFF"
+        }
