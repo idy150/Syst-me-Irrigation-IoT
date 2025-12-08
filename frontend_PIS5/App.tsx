@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+ import React, { useEffect, useState } from 'react';
 import { simulationService } from './services/simulationService';
 import { Zone, WeatherCondition } from './types';
 import ZoneCard from './components/ZoneCard';
