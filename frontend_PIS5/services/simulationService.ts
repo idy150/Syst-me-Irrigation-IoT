@@ -3,34 +3,26 @@ import { Zone, CropType, WeatherCondition, SensorData } from '../types';
 // Initial Mock Data
 const INITIAL_ZONES: Zone[] = [
   {
-    id: 'z1',
-    name: 'Zone Nord - Maïs',
+    id: 'field1',
+    name: 'Champ Principal',
     cropType: CropType.CORN,
     area: 12.5,
     isValveOpen: false,
     sensorHistory: [],
-    currentReading: { timestamp: Date.now(), moisture: 45, temperature: 24, humidity: 60 },
+    currentReading: { 
+      timestamp: Date.now(), 
+      moisture: 45, 
+      temperature: 24, 
+      humidity: 60,
+      soilMoisture10cm: 42,
+      soilMoisture30cm: 47,
+      soilMoisture60cm: 52,
+      light: 450,
+      windSpeed: 8.5,
+      rainfall: false,
+      rainfallIntensity: 'none'
+    },
     status: 'OPTIMAL'
-  },
-  {
-    id: 'z2',
-    name: 'Serre A - Tomates',
-    cropType: CropType.TOMATO,
-    area: 2.0,
-    isValveOpen: true,
-    sensorHistory: [],
-    currentReading: { timestamp: Date.now(), moisture: 65, temperature: 28, humidity: 80 },
-    status: 'OPTIMAL'
-  },
-  {
-    id: 'z3',
-    name: 'Vignoble Sud',
-    cropType: CropType.VINEYARD,
-    area: 8.5,
-    isValveOpen: false,
-    sensorHistory: [],
-    currentReading: { timestamp: Date.now(), moisture: 28, temperature: 26, humidity: 45 },
-    status: 'WARNING'
   }
 ];
 
@@ -42,10 +34,103 @@ class SimulationService {
   private listeners: Listener[] = [];
   private intervalId: number | null = null;
   private isRunning = false;
-  private tickRate = 2000; // Update every 2 seconds
+  private tickRate = 3000; // Update every 3 seconds (chaque tick = 30 minutes simulées)
 
   constructor() {
+    this.generateInitialHistory();
     this.start();
+  }
+
+  // Générer l'historique des 24 dernières heures
+  private generateInitialHistory() {
+    const now = Date.now();
+    const hoursBack = 24;
+    const pointsPerHour = 1; // Un point par heure exactement
+    const totalPoints = hoursBack;
+
+    this.zones = this.zones.map(zone => {
+      const history: SensorData[] = [];
+      
+      for (let i = totalPoints - 1; i >= 0; i--) {
+        // Créer un timestamp à l'heure exacte (minutes=0, secondes=0)
+        const currentTime = new Date(now);
+        currentTime.setHours(currentTime.getHours() - i);
+        currentTime.setMinutes(0);
+        currentTime.setSeconds(0);
+        currentTime.setMilliseconds(0);
+        const timestamp = currentTime.getTime();
+        
+        // Simulation de variations réalistes sur 24h
+        const hourOfDay = new Date(timestamp).getHours();
+        
+        // Température: plus chaude en journée (12h-18h), plus froide la nuit (0h-6h)
+        let baseTemp = 20;
+        if (hourOfDay >= 6 && hourOfDay <= 18) {
+          baseTemp = 18 + 8 * Math.sin(Math.PI * (hourOfDay - 6) / 12);
+        } else {
+          baseTemp = 15 + Math.random() * 3;
+        }
+        const temperature = baseTemp + (Math.random() - 0.5) * 2;
+        
+        // Humidité: plus élevée la nuit et tôt le matin
+        let baseHumidity = 60;
+        if (hourOfDay >= 20 || hourOfDay <= 8) {
+          baseHumidity = 75;
+        } else if (hourOfDay >= 12 && hourOfDay <= 16) {
+          baseHumidity = 45;
+        }
+        const humidity = Math.max(30, Math.min(95, baseHumidity + (Math.random() - 0.5) * 15));
+        
+        // Humidité du sol: varie lentement, baisse pendant la journée
+        let baseMoisture = 50;
+        if (hourOfDay >= 10 && hourOfDay <= 16) {
+          baseMoisture = 45; // Plus sec pendant les heures chaudes
+        }
+        const moisture = Math.max(20, Math.min(80, baseMoisture + (Math.random() - 0.5) * 10));
+        
+        // Lumière: suit le cycle jour/nuit
+        let light = 0;
+        if (hourOfDay >= 6 && hourOfDay <= 19) {
+          const sunPosition = Math.sin(Math.PI * (hourOfDay - 6) / 13);
+          light = Math.max(0, 100 + 700 * sunPosition + (Math.random() - 0.5) * 100);
+        } else {
+          light = Math.random() * 10; // Très peu de lumière la nuit
+        }
+        
+        // Vent: plus variable pendant la journée
+        const windSpeed = 3 + Math.random() * 15 + (hourOfDay >= 10 && hourOfDay <= 16 ? 5 : 0);
+        
+        // Pluie: plus probable en soirée/nuit
+        const rainProbability = hourOfDay >= 18 || hourOfDay <= 6 ? 0.15 : 0.05;
+        const rainfall = Math.random() < rainProbability;
+        
+        const soilMoisture10cm = moisture + (Math.random() - 0.5) * 8;
+        const soilMoisture30cm = moisture + (Math.random() - 0.5) * 5;
+        const soilMoisture60cm = moisture + (Math.random() - 0.5) * 3;
+        
+        history.push({
+          timestamp,
+          moisture,
+          temperature,
+          humidity,
+          soilMoisture10cm: Math.max(0, Math.min(100, soilMoisture10cm)),
+          soilMoisture30cm: Math.max(0, Math.min(100, soilMoisture30cm)),
+          soilMoisture60cm: Math.max(0, Math.min(100, soilMoisture60cm)),
+          light: Math.round(Math.max(0, light)),
+          windSpeed: Math.round(windSpeed * 10) / 10,
+          rainfall,
+          rainfallIntensity: rainfall ? 
+            (Math.random() < 0.3 ? 'light' : Math.random() < 0.7 ? 'moderate' : 'heavy') as const : 
+            'none' as const
+        });
+      }
+      
+      return {
+        ...zone,
+        sensorHistory: history,
+        currentReading: history[history.length - 1]
+      };
+    });
   }
 
   public subscribe(listener: Listener): () => void {
@@ -132,15 +217,41 @@ class SimulationService {
       // Too wet is also bad
       if (moisture > 90) status = 'WARNING'; 
 
+      // Générer les nouvelles données de capteurs
+      const soilMoisture10cm = moisture + (Math.random() - 0.5) * 5; // Surface plus variable
+      const soilMoisture30cm = moisture + (Math.random() - 0.5) * 3; // Moyenne profondeur
+      const soilMoisture60cm = moisture + (Math.random() - 0.5) * 2; // Profondeur plus stable
+      
+      // Lumière basée sur la météo et l'heure simulée
+      const baseLight = this.weather.condition === 'Sunny' ? 800 : 
+                       this.weather.condition === 'Cloudy' ? 300 : 50;
+      const light = Math.max(0, baseLight + (Math.random() - 0.5) * 200);
+      
+      // Vent variable
+      const windSpeed = 5 + Math.random() * 15; // 5-20 km/h
+      
+      // Pluie basée sur la météo
+      const rainfall = this.weather.condition === 'Rainy';
+      const rainfallIntensity = rainfall ? 
+        (Math.random() < 0.3 ? 'light' : Math.random() < 0.7 ? 'moderate' : 'heavy') as const : 
+        'none' as const;
+
       const newReading: SensorData = {
         timestamp: now,
         moisture,
         temperature,
-        humidity
+        humidity,
+        soilMoisture10cm: Math.min(100, Math.max(0, soilMoisture10cm)),
+        soilMoisture30cm: Math.min(100, Math.max(0, soilMoisture30cm)),
+        soilMoisture60cm: Math.min(100, Math.max(0, soilMoisture60cm)),
+        light: Math.round(light),
+        windSpeed: Math.round(windSpeed * 10) / 10,
+        rainfall,
+        rainfallIntensity
       };
 
-      // Keep history limited to last 50 points to prevent memory issues in this demo
-      const newHistory = [...zone.sensorHistory, newReading].slice(-50);
+      // Keep history limited to 24 points (24 heures avec un point par heure)
+      const newHistory = [...zone.sensorHistory, newReading].slice(-24);
 
       return {
         ...zone,
