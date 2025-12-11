@@ -10,6 +10,13 @@ export interface SensorData {
   moisture: number; // %
   temperature: number; // Celsius
   humidity: number; // %
+  soilMoisture10cm: number; // %
+  soilMoisture30cm: number; // %
+  soilMoisture60cm: number; // %
+  light: number; // lux
+  windSpeed: number; // km/h
+  rainfall: boolean; // true/false
+  rainfallIntensity: 'light' | 'moderate' | 'heavy' | 'none';
 }
 
 export interface Zone {
