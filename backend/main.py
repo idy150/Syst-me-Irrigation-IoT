@@ -40,8 +40,8 @@ def receive_sensor_data(data: SensorDataCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(record)
 
-    # Decision
-    decision = irrigation_decision(data.soil_moisture)
+    # Decision based on soil moisture + previous pump state
+    decision = irrigation_decision(data.soil_moisture, data.pump_was_active)
 
     return decision
 

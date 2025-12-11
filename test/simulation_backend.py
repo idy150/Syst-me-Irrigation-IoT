@@ -29,6 +29,7 @@ capteurs = {
 temps_simulation = 0
 saison = CONFIG_SIMULATION['saison']
 compteur_envois = 0
+irrigation_active = False  # État de la pompe
 
 print("✅ Capteurs initialisés!")
 print("🚀 Démarrage de la simulation...\n")
@@ -46,14 +47,15 @@ try:
         lumiere = capteurs['lumiere'].simuler(heure_actuelle)
         
         # Simulation humidité du sol (3 profondeurs)
+        # IMPORTANT : Utiliser l'état de la pompe reçu du backend
         humidite_10cm = capteurs['humidite_10cm'].simuler(
-            300, temperature, lumiere, vitesse_vent, False, pleut
+            300, temperature, lumiere, vitesse_vent, irrigation_active, pleut
         )
         humidite_30cm = capteurs['humidite_30cm'].simuler(
-            300, temperature, lumiere, vitesse_vent, False, pleut
+            300, temperature, lumiere, vitesse_vent, irrigation_active, pleut
         )
         humidite_60cm = capteurs['humidite_60cm'].simuler(
-            300, temperature, lumiere, vitesse_vent, False, pleut
+            300, temperature, lumiere, vitesse_vent, irrigation_active, pleut
         )
         
         # Calculer l'humidité de l'air (simulation basique)
@@ -75,9 +77,10 @@ try:
         
         # Préparer les données pour le backend
         payload = {
-            "humidity": humidite_air,          # Humidité de l'air
-            "temperature": temperature,         # Température
-            "soil_moisture": humidite_10cm     # Humidité du sol (surface)
+            "humidity": humidite_air,           # Humidité de l'air
+            "temperature": temperature,          # Température
+            "soil_moisture": humidite_10cm,     # Humidité du sol (surface)
+            "pump_was_active": irrigation_active # État précédent de la pompe
         }
         
         # Affichage local
@@ -101,6 +104,10 @@ try:
                 print(f"✅ Réponse reçue!")
                 print(f"💦 Pompe: {'🟢 ACTIVE' if decision['pump'] else '🔴 INACTIVE'}")
                 print(f"📋 Message: {decision['message']}")
+                
+                # IMPORTANT : Mettre à jour l'état de l'irrigation pour la prochaine itération
+                irrigation_active = decision['pump']
+                
                 compteur_envois += 1
             else:
                 print(f"⚠️  Erreur HTTP {response.status_code}: {response.text}")

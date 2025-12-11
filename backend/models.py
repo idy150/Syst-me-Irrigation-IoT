@@ -20,6 +20,7 @@ class SensorDataCreate(BaseModel):
     humidity: float
     temperature: float
     soil_moisture: float
+    pump_was_active: bool = False  # État précédent de la pompe
 
 class IrrigationDecision(BaseModel):
     pump: bool

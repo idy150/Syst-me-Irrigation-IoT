@@ -14,11 +14,12 @@ class CapteurHumidite:
         
         # Effet de la pluie
         if pleut:
-            self.humidite += random.uniform(2, 5)
+            self.humidite += random.uniform(3, 7)  # Augmenté : pluie apporte beaucoup d'eau
             
-        # Effet de l'irrigation
+        # Effet de l'irrigation (AMÉLIORÉ pour être plus efficace)
         if est_en_irrigation:
-            effet_irrigation = random.uniform(3, 6)
+            # Base plus forte : 8 à 12% au lieu de 3 à 6%
+            effet_irrigation = random.uniform(8, 12)
             # L'effet diminue avec la profondeur
             if self.profondeur == "30cm":
                 effet_irrigation *= 0.8
@@ -26,8 +27,8 @@ class CapteurHumidite:
                 effet_irrigation *= 0.6
             self.humidite += effet_irrigation
             
-        # Évaporation naturelle
-        self.humidite -= taux_evaporation * random.uniform(0.8, 1.2)
+        # Évaporation naturelle (réduite de 20% pour être plus réaliste)
+        self.humidite -= taux_evaporation * random.uniform(0.6, 0.9)
         
         # Limiter entre 0 et 100%
         self.humidite = max(0, min(100, self.humidite))
