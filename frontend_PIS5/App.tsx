@@ -1,13 +1,7 @@
- import React, { useEffect, useState } from 'react';
-import { simulationService } from './services/simulationService';
-import { Zone, WeatherCondition } from './types';
-import ZoneCard from './components/ZoneCard';
-import SensorChart from './components/SensorChart';
-import AIAdvisor from './components/AIAdvisor';
-import { 
-  CloudRain, Sun, Cloud, LayoutDashboard, Settings, 
-  Droplet, Activity, Power
-} from 'lucide-react';
+ import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import HomePage from './services/home_page';
+import Dashboard from './services/dashboard';
 
 function App() {
   return (
