@@ -1,5 +1,17 @@
+/**
+ * ⚠️ FICHIER OBSOLÈTE - NE PAS UTILISER ⚠️
+ * 
+ * Ce fichier générait des données de simulation LOCALES dans le navigateur.
+ * Il a été remplacé par backendService.ts qui récupère les vraies données
+ * depuis le backend Python (http://127.0.0.1:8000).
+ * 
+ * Ce fichier est conservé uniquement comme référence.
+ * Utilisez backendService.ts à la place.
+ */
+
 import { Zone, CropType, WeatherCondition, SensorData } from '../types';
 
+// ❌ ANCIEN CODE - Données de simulation locales (ne plus utiliser)
 // Initial Mock Data
 const INITIAL_ZONES: Zone[] = [
   {
@@ -28,6 +40,7 @@ const INITIAL_ZONES: Zone[] = [
 
 type Listener = (zones: Zone[], weather: WeatherCondition) => void;
 
+// ❌ Service de simulation locale - remplacé par backendService
 class SimulationService {
   private zones: Zone[] = JSON.parse(JSON.stringify(INITIAL_ZONES));
   private weather: WeatherCondition = { condition: 'Sunny', ambientTemp: 25 };
@@ -37,12 +50,16 @@ class SimulationService {
   private tickRate = 3000; // Update every 3 seconds (chaque tick = 30 minutes simulées)
 
   constructor() {
-    this.generateInitialHistory();
-    this.start();
+    // ❌ DÉSACTIVÉ - Ne génère plus de données locales
+    // this.generateInitialHistory();
+    // this.start();
+    console.warn('⚠️ simulationService est obsolète. Utilisez backendService à la place.');
   }
 
-  // Générer l'historique des 24 dernières heures
+  // ❌ DÉSACTIVÉ - Générait un historique de données fictives
+  // Pour avoir un historique, utilisez les vraies données du backend
   private generateInitialHistory() {
+    /* DÉSACTIVÉ - CODE COMMENTÉ
     const now = Date.now();
     const hoursBack = 24;
     const pointsPerHour = 1; // Un point par heure exactement
@@ -131,8 +148,11 @@ class SimulationService {
         currentReading: history[history.length - 1]
       };
     });
+    */ // FIN DU CODE DÉSACTIVÉ
   }
 
+  // ✅ Méthodes conservées pour compatibilité (mais ne génèrent plus de données locales)
+  // ✅ Méthodes conservées pour compatibilité (mais ne génèrent plus de données locales)
   public subscribe(listener: Listener): () => void {
     this.listeners.push(listener);
     // Send immediate initial state
@@ -142,10 +162,15 @@ class SimulationService {
     };
   }
 
+  // ❌ DÉSACTIVÉ - N'exécute plus la simulation locale
   public start() {
+    // Ne fait plus rien - les données viennent maintenant du backend
+    console.warn('⚠️ simulationService.start() est désactivé. Les données viennent du backend.');
+    /* DÉSACTIVÉ
     if (this.isRunning) return;
     this.isRunning = true;
     this.intervalId = window.setInterval(this.tick, this.tickRate);
+    */
   }
 
   public stop() {
@@ -157,6 +182,9 @@ class SimulationService {
   }
 
   public toggleValve(zoneId: string) {
+    // ❌ Actions locales désactivées - utiliser backendService
+    console.warn('⚠️ Utilisez backendService.toggleValve() pour envoyer la commande au backend.');
+    /* DÉSACTIVÉ
     this.zones = this.zones.map(z => {
       if (z.id === zoneId) {
         return { ...z, isValveOpen: !z.isValveOpen };
@@ -164,17 +192,25 @@ class SimulationService {
       return z;
     });
     this.notify();
+    */
   }
 
   public setWeather(condition: 'Sunny' | 'Cloudy' | 'Rainy') {
+    // ❌ Modification météo locale désactivée
+    console.warn('⚠️ La météo devrait venir des capteurs du backend.');
+    /* DÉSACTIVÉ
     this.weather.condition = condition;
     if (condition === 'Rainy') this.weather.ambientTemp = 20;
     if (condition === 'Sunny') this.weather.ambientTemp = 30;
     if (condition === 'Cloudy') this.weather.ambientTemp = 24;
     this.notify();
+    */
   }
 
+  // ❌ DÉSACTIVÉ - Simulation des changements de capteurs (tick)
   private tick = () => {
+    // Ne fait plus rien - désactivé
+    /* DÉSACTIVÉ - TOUT LE CODE DE SIMULATION LOCALE
     const now = Date.now();
     
     // Simulate Weather Impact
@@ -263,10 +299,14 @@ class SimulationService {
 
     this.notify();
   };
+  */ // FIN DU CODE DE SIMULATION DÉSACTIVÉ
+  };
 
   private notify() {
     this.listeners.forEach(l => l(this.zones, this.weather));
   }
 }
 
+// ⚠️ Export conservé pour compatibilité mais ne génère plus de données locales
+// Utilisez backendService à la place pour les vraies données du backend
 export const simulationService = new SimulationService();

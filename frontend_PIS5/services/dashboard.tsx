@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { simulationService } from './simulationService';
+import { backendService } from './backendService';
 import { Zone, WeatherCondition } from '../types';
 import { 
   CloudRain, Sun, Cloud, LayoutDashboard, Settings, 
@@ -15,9 +15,9 @@ function Dashboard() {
   const [weather, setWeather] = useState<WeatherCondition>({ condition: 'Sunny', ambientTemp: 25 });
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
 
-  // Subscribe to simulation service on mount
+  // Subscribe to backend service on mount
   useEffect(() => {
-    const unsubscribe = simulationService.subscribe((updatedZones, updatedWeather) => {
+    const unsubscribe = backendService.subscribe((updatedZones, updatedWeather) => {
       setZones(updatedZones);
       setWeather(updatedWeather);
       
@@ -33,11 +33,11 @@ function Dashboard() {
   const selectedZone = zones.find(z => z.id === selectedZoneId) || zones[0];
 
   const handleValveToggle = (id: string) => {
-    simulationService.toggleValve(id);
+    backendService.toggleValve(id);
   };
 
   const handleWeatherChange = (condition: 'Sunny' | 'Cloudy' | 'Rainy') => {
-    simulationService.setWeather(condition);
+    backendService.setWeather(condition);
   };
 
   // Safe check for loading state
@@ -136,13 +136,26 @@ function Dashboard() {
         {/* Champ Principal */}
         <section className="mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-start mb-6">
               <div>
                 <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
                   <Sprout size={24} className="text-green-600"/>
                   {selectedZone.name}
                 </h3>
                 <p className="text-gray-500 mt-1">{selectedZone.cropType} • {selectedZone.area} hectares</p>
+                
+                {/* État de la pompe et irrigation */}
+                <div className={`mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-all ${
+                  selectedZone.isValveOpen 
+                    ? 'bg-blue-100 text-blue-700 border-2 border-blue-300 animate-pulse' 
+                    : 'bg-gray-100 text-gray-600 border-2 border-gray-300'
+                }`}>
+                  <Power size={16} className={selectedZone.isValveOpen ? 'text-blue-600' : 'text-gray-400'} />
+                  <span>
+                    {selectedZone.isValveOpen ? '💧 Pompe ACTIVE - Irrigation en cours' : '⚫ Pompe INACTIVE - Système en veille'}
+                  </span>
+                  <div className={`w-2 h-2 rounded-full ${selectedZone.isValveOpen ? 'bg-blue-600' : 'bg-gray-400'}`}></div>
+                </div>
               </div>
               <button 
                 onClick={() => handleValveToggle(selectedZone.id)}

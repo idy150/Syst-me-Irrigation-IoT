@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { simulationService } from '../services/simulationService';
+import { backendService } from '../services/backendService';
 import { Zone, WeatherCondition } from '../types';
 import ZoneCard from '../components/ZoneCard';
 import SensorChart from '../components/SensorChart';
@@ -18,9 +18,27 @@ function Dashboard({ onNavigate }: DashboardProps) {
   const [weather, setWeather] = useState<WeatherCondition>({ condition: 'Sunny', ambientTemp: 25 });
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
 
-  // Subscribe to simulation service on mount
+  // Subscribe to backend service on mount
   useEffect(() => {
-    const unsubscribe = simulationService.subscribe((updatedZones, updatedWeather) => {
+    console.log('🎯 [Dashboard] Subscribing to backendService...');
+    const unsubscribe = backendService.subscribe((updatedZones, updatedWeather) => {
+      console.log('📥 [Dashboard] Received update:', {
+        zonesCount: updatedZones.length,
+        weather: updatedWeather.condition,
+        temp: updatedWeather.ambientTemp
+      });
+      
+      if (updatedZones.length > 0) {
+        const firstZone = updatedZones[0];
+        console.log('🌱 [Dashboard] First zone data:', {
+          name: firstZone.name,
+          temp: firstZone.currentReading.temperature,
+          soil10: firstZone.currentReading.soilMoisture10cm,
+          soil30: firstZone.currentReading.soilMoisture30cm,
+          soil60: firstZone.currentReading.soilMoisture60cm
+        });
+      }
+      
       setZones(updatedZones);
       setWeather(updatedWeather);
       
@@ -29,18 +47,22 @@ function Dashboard({ onNavigate }: DashboardProps) {
         setSelectedZoneId(updatedZones[0].id);
       }
     });
-    return () => unsubscribe();
+    console.log('✅ [Dashboard] Subscribed successfully');
+    return () => {
+      console.log('🔌 [Dashboard] Unsubscribing...');
+      unsubscribe();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const selectedZone = zones.find(z => z.id === selectedZoneId) || zones[0];
 
   const handleValveToggle = (id: string) => {
-    simulationService.toggleValve(id);
+    backendService.toggleValve(id);
   };
 
   const handleWeatherChange = (condition: 'Sunny' | 'Cloudy' | 'Rainy') => {
-    simulationService.setWeather(condition);
+    backendService.setWeather(condition);
   };
 
   // Version de test - affiche le dashboard même sans données

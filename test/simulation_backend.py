@@ -75,12 +75,30 @@ try:
         
         humidite_air = round(max(20, min(100, humidite_air)), 1)
         
-        # Préparer les données pour le backend
+        # Déterminer l'intensité de la pluie
+        intensite_pluie_str = 'none'
+        if pleut:
+            if intensite_pluie == 'légère':
+                intensite_pluie_str = 'light'
+            elif intensite_pluie == 'modérée':
+                intensite_pluie_str = 'moderate'
+            elif intensite_pluie == 'forte':
+                intensite_pluie_str = 'heavy'
+        
+        # Préparer les données COMPLÈTES pour le backend
         payload = {
-            "humidity": humidite_air,           # Humidité de l'air
-            "temperature": temperature,          # Température
-            "soil_moisture": humidite_10cm,     # Humidité du sol (surface)
-            "pump_was_active": irrigation_active # État précédent de la pompe
+            "zone_id": "zone-1",
+            "humidity": humidite_air,
+            "temperature": temperature,
+            "soil_moisture": humidite_10cm,
+            "soil_moisture_10cm": humidite_10cm,
+            "soil_moisture_30cm": humidite_30cm,
+            "soil_moisture_60cm": humidite_60cm,
+            "light": lumiere,
+            "wind_speed": vitesse_vent,
+            "rainfall": pleut,
+            "rainfall_intensity": intensite_pluie_str,
+            "pump_was_active": irrigation_active
         }
         
         # Affichage local

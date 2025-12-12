@@ -12,26 +12,45 @@ class CapteurHumidite:
         # Évaporation basée sur la température, lumière et vent
         taux_evaporation = (temperature - 15) * 0.1 + lumiere * 0.0001 + vitesse_vent * 0.05
         
+        # Réduire l'évaporation en profondeur (le sol profond garde mieux l'eau)
+        if self.profondeur == "30cm":
+            taux_evaporation *= 0.5  # 50% moins d'évaporation à 30cm
+        elif self.profondeur == "60cm":
+            taux_evaporation *= 0.3  # 70% moins d'évaporation à 60cm
+        
         # Effet de la pluie
         if pleut:
-            self.humidite += random.uniform(3, 7)  # Augmenté : pluie apporte beaucoup d'eau
+            # La pluie pénètre moins en profondeur
+            if self.profondeur == "10cm":
+                self.humidite += random.uniform(3, 7)
+            elif self.profondeur == "30cm":
+                self.humidite += random.uniform(1.5, 3.5)
+            elif self.profondeur == "60cm":
+                self.humidite += random.uniform(0.5, 1.5)
             
-        # Effet de l'irrigation (AMÉLIORÉ pour être plus efficace)
+        # Effet de l'irrigation
         if est_en_irrigation:
-            # Base plus forte : 8 à 12% au lieu de 3 à 6%
+            # Base forte pour l'irrigation
             effet_irrigation = random.uniform(8, 12)
             # L'effet diminue avec la profondeur
             if self.profondeur == "30cm":
-                effet_irrigation *= 0.8
+                effet_irrigation *= 0.7
             elif self.profondeur == "60cm":
-                effet_irrigation *= 0.6
+                effet_irrigation *= 0.5
             self.humidite += effet_irrigation
             
-        # Évaporation naturelle (réduite de 20% pour être plus réaliste)
+        # Évaporation naturelle (réduite)
         self.humidite -= taux_evaporation * random.uniform(0.6, 0.9)
         
-        # Limiter entre 0 et 100%
-        self.humidite = max(0, min(100, self.humidite))
+        # Définir un minimum réaliste selon la profondeur (le sol ne sèche jamais complètement en profondeur)
+        humidite_min = {
+            "10cm": 15,   # Sol de surface peut devenir très sec
+            "30cm": 25,   # Sol moyen garde un minimum d'humidité
+            "60cm": 35    # Sol profond reste toujours assez humide
+        }.get(self.profondeur, 0)
+        
+        # Limiter entre minimum et 100%
+        self.humidite = max(humidite_min, min(100, self.humidite))
         
         return round(self.humidite, 1)
 

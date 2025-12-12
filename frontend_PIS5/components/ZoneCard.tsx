@@ -1,14 +1,15 @@
 import React from 'react';
 import { Zone } from '../types';
-import { Droplets, Thermometer, Wind, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Droplets, Thermometer, Wind, AlertTriangle, CheckCircle2, Power } from 'lucide-react';
 
 interface ZoneCardProps {
   zone: Zone;
-  onClick: () => void;
+  onValveToggle: (id: string) => void;
+  onSelect: (id: string) => void;
   isSelected: boolean;
 }
 
-const ZoneCard: React.FC<ZoneCardProps> = ({ zone, onClick, isSelected }) => {
+const ZoneCard: React.FC<ZoneCardProps> = ({ zone, onValveToggle, onSelect, isSelected }) => {
   const { moisture, temperature, humidity } = zone.currentReading;
 
   // Dynamic Styles based on Status
@@ -26,7 +27,7 @@ const ZoneCard: React.FC<ZoneCardProps> = ({ zone, onClick, isSelected }) => {
 
   return (
     <div 
-      onClick={onClick}
+      onClick={() => onSelect(zone.id)}
       className={`
         relative overflow-hidden rounded-xl border-2 transition-all duration-200 cursor-pointer group
         ${isSelected ? 'border-indigo-600 ring-2 ring-indigo-100 shadow-lg scale-[1.02]' : 'border-white hover:border-indigo-200 shadow hover:shadow-md bg-white'}
@@ -74,12 +75,33 @@ const ZoneCard: React.FC<ZoneCardProps> = ({ zone, onClick, isSelected }) => {
           </div>
         </div>
 
-        {/* Valve Indicator */}
-        <div className="mt-4 flex items-center justify-between">
-           <span className="text-xs text-gray-400 font-medium">État du système</span>
-           <div className={`text-xs font-bold px-2 py-1 rounded border ${zone.isValveOpen ? 'border-blue-200 bg-blue-100 text-blue-700 animate-pulse' : 'border-gray-200 bg-gray-50 text-gray-500'}`}>
-             {zone.isValveOpen ? 'VANNE OUVERTE' : 'VANNE FERMÉE'}
-           </div>
+        {/* Valve & Pump Status */}
+        <div className="mt-4 flex items-center justify-between p-3 rounded-lg border-2 transition-all"
+             style={{
+               borderColor: zone.isValveOpen ? '#3b82f6' : '#e5e7eb',
+               backgroundColor: zone.isValveOpen ? '#eff6ff' : '#f9fafb'
+             }}>
+          <div className="flex items-center gap-2">
+            <Power 
+              size={18} 
+              className={`${zone.isValveOpen ? 'text-blue-600 animate-pulse' : 'text-gray-400'}`}
+            />
+            <div>
+              <span className="text-xs font-semibold text-gray-600 block">
+                {zone.isValveOpen ? '💧 Pompe Active' : '⚫ Pompe Inactive'}
+              </span>
+              <span className="text-[10px] text-gray-500">
+                {zone.isValveOpen ? 'Irrigation en cours...' : 'Système en veille'}
+              </span>
+            </div>
+          </div>
+          <div className={`text-xs font-bold px-3 py-1.5 rounded-full border-2 ${
+            zone.isValveOpen 
+              ? 'border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-200' 
+              : 'border-gray-300 bg-white text-gray-600'
+          }`}>
+            {zone.isValveOpen ? 'ON' : 'OFF'}
+          </div>
         </div>
       </div>
     </div>
