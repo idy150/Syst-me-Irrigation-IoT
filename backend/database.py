@@ -1,12 +1,18 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.errors import ConnectionFailure
+import os
 
-DATABASE_URL = "sqlite:///./irrigation.db"
+# MongoDB connection settings
+MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+DATABASE_NAME = "irrigation"
 
-engine = create_engine(
-    DATABASE_URL, connect_args={"check_same_thread": False}
-)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
+try:
+    client = AsyncIOMotorClient(MONGODB_URL)
+    db = client[DATABASE_NAME]
+    # Test connection
+    client.admin.command('ping')
+    print("Connected to MongoDB")
+except ConnectionFailure as e:
+    print(f"Failed to connect to MongoDB: {e}")
+    print("Please ensure MongoDB is running on localhost:27017 or set MONGODB_URL environment variable")
+    db = None  # Set to None to handle in code

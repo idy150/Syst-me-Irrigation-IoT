@@ -1,0 +1,11 @@
+# Script audio pour irrigation démarrée
+# Utilisez un outil Text-to-Speech pour générer :
+# "Le champ est en train de se faire arroser"
+
+# Commande exemple avec espeak (Linux) :
+# espeak -v fr -s 120 "Le champ est en train de se faire arroser" -w irrigation_started.wav
+
+# Ou avec gTTS (Python) :
+# from gtts import gTTS
+# tts = gTTS(text="Le champ est en train de se faire arroser", lang='fr')
+# tts.save("irrigation_started.mp3")

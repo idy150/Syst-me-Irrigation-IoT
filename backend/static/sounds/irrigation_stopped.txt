@@ -1,0 +1,11 @@
+# Script audio pour irrigation arrêtée
+# Utilisez un outil Text-to-Speech pour générer :
+# "L'arrosage est arrêté"
+
+# Commande exemple avec espeak (Linux) :
+# espeak -v fr -s 120 "L'arrosage est arrêté" -w irrigation_stopped.wav
+
+# Ou avec gTTS (Python) :
+# from gtts import gTTS
+# tts = gTTS(text="L'arrosage est arrêté", lang='fr')
+# tts.save("irrigation_stopped.mp3")

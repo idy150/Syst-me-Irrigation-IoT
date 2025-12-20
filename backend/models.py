@@ -1,55 +1,73 @@
-from sqlalchemy import Column, Integer, Float, DateTime, String, Boolean
-from sqlalchemy.sql import func
-from pydantic import BaseModel
-from typing import Literal
+from pydantic import BaseModel, Field
+from typing import Literal, Optional
+from datetime import datetime
+from bson import ObjectId
 
-from database import Base
+# Custom ObjectId field for Pydantic
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
 
-class SensorData(Base):
-    __tablename__ = "sensor_data"
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid objectid")
+        return ObjectId(v)
 
-    id = Column(Integer, primary_key=True, index=True)
-    zone_id = Column(String, default="zone-1")
-    humidity = Column(Float)
-    temperature = Column(Float)
-    soil_moisture = Column(Float)
-    soil_moisture_10cm = Column(Float, nullable=True)
-    soil_moisture_30cm = Column(Float, nullable=True)
-    soil_moisture_60cm = Column(Float, nullable=True)
-    light = Column(Float, nullable=True)
-    wind_speed = Column(Float, nullable=True)
-    rainfall = Column(Boolean, default=False)
-    rainfall_intensity = Column(String, default="none")
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    @classmethod
+    def __get_pydantic_json_schema__(cls, core_schema, handler):
+        return {"type": "string"}
 
+class SensorData(BaseModel):
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    zone_id: str = "zone-1"
+    humidity: float
+    temperature: float
+    soil_moisture: float
+    soil_moisture_10cm: Optional[float] = None
+    soil_moisture_30cm: Optional[float] = None
+    soil_moisture_60cm: Optional[float] = None
+    light: Optional[float] = None
+    wind_speed: Optional[float] = None
+    rainfall: bool = False
+    rainfall_intensity: str = "none"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
-class ValveState(Base):
-    __tablename__ = "valve_states"
+    class Config:
+        validate_by_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
 
-    id = Column(Integer, primary_key=True, index=True)
-    zone_id = Column(String, unique=True, index=True)
-    is_open = Column(Boolean, default=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+class ValveState(BaseModel):
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    zone_id: str
+    is_open: bool = False
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+    class Config:
+        validate_by_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
 
-# ---------- Pydantic Models ----------
+# ---------- Pydantic Models for API ----------
 
 class SensorDataCreate(BaseModel):
     zone_id: str = "zone-1"
     humidity: float
     temperature: float
     soil_moisture: float
-    soil_moisture_10cm: float | None = None
-    soil_moisture_30cm: float | None = None
-    soil_moisture_60cm: float | None = None
-    light: float | None = None
-    wind_speed: float | None = None
+    soil_moisture_10cm: Optional[float] = None
+    soil_moisture_30cm: Optional[float] = None
+    soil_moisture_60cm: Optional[float] = None
+    light: Optional[float] = None
+    wind_speed: Optional[float] = None
     rainfall: bool = False
     rainfall_intensity: Literal['light', 'moderate', 'heavy', 'none'] = 'none'
     pump_was_active: bool = False  # État précédent de la pompe
 
 class SensorDataResponse(BaseModel):
-    id: int
+    id: str
     zone_id: str
     timestamp: int  # milliseconds
     moisture: float
@@ -64,12 +82,13 @@ class SensorDataResponse(BaseModel):
     rainfallIntensity: str
     created_at: str
 
-    class Config:
-        from_attributes = True
-
 class IrrigationDecision(BaseModel):
     pump: bool
     message: str
+    visual_emojis: str  # Emojis animés à afficher
+    animation_type: str  # Type d'animation (e.g., "watering", "stopped")
+    sound_message: str  # Message vocal à jouer
+    sound_url: Optional[str] = None  # URL du fichier audio si disponible
 
 class ValveToggleRequest(BaseModel):
     zone_id: str
@@ -79,3 +98,7 @@ class ValveToggleResponse(BaseModel):
     zone_id: str
     valve_open: bool
     message: str
+    visual_emojis: str  # Emojis animés
+    animation_type: str  # Type d'animation
+    sound_message: str  # Message vocal
+    sound_url: Optional[str] = None  # URL audio
