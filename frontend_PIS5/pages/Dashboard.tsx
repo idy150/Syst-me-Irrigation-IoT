@@ -17,6 +17,7 @@ function Dashboard({ onNavigate }: DashboardProps) {
   const [zones, setZones] = useState<Zone[]>([]);
   const [weather, setWeather] = useState<WeatherCondition>({ condition: 'Sunny', ambientTemp: 25 });
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
+  const [isIterationRunning, setIsIterationRunning] = useState<boolean>(false);
 
   // Subscribe to backend service on mount
   useEffect(() => {
@@ -63,6 +64,18 @@ function Dashboard({ onNavigate }: DashboardProps) {
 
   const handleWeatherChange = (condition: 'Sunny' | 'Cloudy' | 'Rainy') => {
     backendService.setWeather(condition);
+  };
+
+  const handleStartIteration = () => {
+    console.log('🚀 [Dashboard] Starting iteration...');
+    backendService.start();
+    setIsIterationRunning(true);
+  };
+
+  const handleStopIteration = () => {
+    console.log('⏹️ [Dashboard] Stopping iteration...');
+    backendService.stop();
+    setIsIterationRunning(false);
   };
 
   // Version de test - affiche le dashboard même sans données
@@ -160,8 +173,22 @@ function Dashboard({ onNavigate }: DashboardProps) {
               <p className="text-gray-600 mt-1">Gérez votre système d'irrigation intelligent</p>
             </div>
             
-            {/* Weather Controls */}
+            {/* Controls */}  
             <div className="flex gap-2">
+              {/* Iteration Control */}
+              <button
+                onClick={isIterationRunning ? handleStopIteration : handleStartIteration}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  isIterationRunning 
+                    ? 'bg-red-500 text-white hover:bg-red-600' 
+                    : 'bg-green-500 text-white hover:bg-green-600'
+                }`}
+              >
+                <Activity className={`w-4 h-4 ${isIterationRunning ? 'animate-pulse' : ''}`} />
+                {isIterationRunning ? 'Arrêter l\'itération' : 'Démarrer l\'itération'}
+              </button>
+              
+              {/* Weather Controls */}
               {(['Sunny', 'Cloudy', 'Rainy'] as const).map((condition) => {
                 const Icon = condition === 'Sunny' ? Sun : condition === 'Cloudy' ? Cloud : CloudRain;
                 const isActive = weather.condition === condition;

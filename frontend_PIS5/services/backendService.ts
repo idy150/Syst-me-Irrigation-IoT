@@ -15,7 +15,7 @@ class BackendService {
 
   constructor() {
     this.initializeZones();
-    this.start();
+    // Don't start automatically - wait for user to start iterations
   }
 
   private async initializeZones() {
@@ -45,8 +45,139 @@ class BackendService {
       }
     ];
 
+    // Generate initial test data
+    await this.generateTestData();
+    
     // Fetch initial data
     await this.fetchBackendData();
+  }
+
+  private async generateTestData() {
+    console.log('🧪 [BackendService] Generating initial test data...');
+    
+    // Generate some historical data points
+    const baseTime = Date.now() - (24 * 60 * 60 * 1000); // 24 hours ago
+    
+    for (let i = 0; i < 20; i++) {
+      const timestamp = baseTime + (i * 60 * 60 * 1000); // Every hour
+      const moisture = 40 + Math.sin(i * 0.5) * 20 + Math.random() * 10; // Vary between 20-70
+      const temperature = 22 + Math.sin(i * 0.3) * 8 + Math.random() * 4; // Vary between 14-38
+      const humidity = 50 + Math.sin(i * 0.4) * 20 + Math.random() * 10; // Vary between 20-90
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/send-data`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            zone_id: 'zone-1',
+            humidity: Math.max(0, Math.min(100, humidity)),
+            temperature: Math.max(0, Math.min(50, temperature)),
+            soil_moisture: Math.max(0, Math.min(100, moisture)),
+            soil_moisture_10cm: Math.max(0, Math.min(100, moisture * 0.9 + Math.random() * 5)),
+            soil_moisture_30cm: Math.max(0, Math.min(100, moisture + Math.random() * 5)),
+            soil_moisture_60cm: Math.max(0, Math.min(100, moisture * 1.1 + Math.random() * 5)),
+            light: 400 + Math.random() * 200,
+            wind_speed: 5 + Math.random() * 10,
+            rainfall: Math.random() < 0.1, // 10% chance of rain
+            rainfall_intensity: Math.random() < 0.1 ? 'light' : 'none',
+            pump_was_active: false
+          })
+        });
+        
+        if (response.ok) {
+          console.log(`✅ [BackendService] Test data point ${i + 1}/20 sent`);
+        } else {
+          console.error(`❌ [BackendService] Failed to send test data point ${i + 1}`);
+        }
+      } catch (error) {
+        console.error(`❌ [BackendService] Error sending test data:`, error);
+      }
+      
+      // Small delay to avoid overwhelming the backend
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    console.log('✅ [BackendService] Test data generation completed');
+  }
+
+  private async generateRealtimeData() {
+    // Generate new sensor readings based on current weather and time
+    const currentHour = new Date().getHours();
+    const isNight = currentHour < 6 || currentHour > 22;
+    
+    // Base values that vary with time and weather
+    let baseTemp = 25;
+    let baseHumidity = 60;
+    let baseMoisture = 45;
+    let light = 450;
+    
+    if (this.weather.condition === 'Rainy') {
+      baseHumidity += 20;
+      baseMoisture += 15;
+    } else if (this.weather.condition === 'Cloudy') {
+      light -= 200;
+    } else if (this.weather.condition === 'Sunny') {
+      baseTemp += 5;
+      light += 200;
+    }
+    
+    if (isNight) {
+      light = 50;
+      baseTemp -= 8;
+    }
+    
+    // Add some randomness
+    const temperature = baseTemp + (Math.random() - 0.5) * 10;
+    const humidity = Math.max(0, Math.min(100, baseHumidity + (Math.random() - 0.5) * 20));
+    const moisture = Math.max(0, Math.min(100, baseMoisture + (Math.random() - 0.5) * 15));
+    const windSpeed = 5 + Math.random() * 15;
+    const rainfall = this.weather.condition === 'Rainy' && Math.random() < 0.3;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/send-data`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          zone_id: 'zone-1',
+          humidity: humidity,
+          temperature: temperature,
+          soil_moisture: moisture,
+          soil_moisture_10cm: Math.max(0, Math.min(100, moisture * 0.9 + (Math.random() - 0.5) * 5)),
+          soil_moisture_30cm: Math.max(0, Math.min(100, moisture + (Math.random() - 0.5) * 5)),
+          soil_moisture_60cm: Math.max(0, Math.min(100, moisture * 1.1 + (Math.random() - 0.5) * 5)),
+          light: Math.max(0, light + (Math.random() - 0.5) * 100),
+          wind_speed: windSpeed,
+          rainfall: rainfall,
+          rainfall_intensity: rainfall ? (Math.random() < 0.5 ? 'light' : 'moderate') : 'none',
+          pump_was_active: this.zones[0]?.isValveOpen || false
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('📡 [BackendService] New sensor data sent:', {
+          temp: temperature.toFixed(1),
+          humidity: humidity.toFixed(1),
+          moisture: moisture.toFixed(1),
+          decision: result.message
+        });
+        
+        // Update weather based on new data
+        if (rainfall) {
+          this.weather.condition = 'Rainy';
+        } else if (light > 600) {
+          this.weather.condition = 'Sunny';
+        } else if (light > 300) {
+          this.weather.condition = 'Cloudy';
+        }
+        this.weather.ambientTemp = temperature;
+        
+      } else {
+        console.error('❌ [BackendService] Failed to send realtime data');
+      }
+    } catch (error) {
+      console.error('❌ [BackendService] Error sending realtime data:', error);
+    }
   }
 
   private async fetchBackendData() {
@@ -134,8 +265,13 @@ class BackendService {
       return;
     }
     this.isRunning = true;
-    console.log(`🚀 [BackendService] Starting polling every ${this.pollRate}ms`);
-    this.intervalId = window.setInterval(() => this.fetchBackendData(), this.pollRate);
+    console.log(`🚀 [BackendService] Starting data generation every ${this.pollRate}ms`);
+    
+    // Generate new sensor data every poll interval
+    this.intervalId = window.setInterval(async () => {
+      await this.generateRealtimeData();
+      await this.fetchBackendData();
+    }, this.pollRate);
   }
 
   public stop() {
@@ -144,6 +280,7 @@ class BackendService {
       this.intervalId = null;
     }
     this.isRunning = false;
+    console.log('⏹️ [BackendService] Stopped data generation');
   }
 
   public async toggleValve(zoneId: string) {

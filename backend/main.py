@@ -14,13 +14,13 @@ app = FastAPI()
 # app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Configure CORS
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://127.0.0.1:3001"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://127.0.0.1:3001"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # Dependency: DB
@@ -158,3 +158,8 @@ async def get_valve_state(zone_id: str, db: AsyncIOMotorDatabase = Depends(get_d
         "valve_open": valve_state["is_open"],
         "updated_at": valve_state["updated_at"].isoformat()
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

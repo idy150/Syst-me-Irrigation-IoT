@@ -1,0 +1,40 @@
+INFO:     Started server process [22996]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+Connected to MongoDB
+INFO:     127.0.0.1:63217 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63219 - "GET /history?limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60117 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51119 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51123 - "GET /history?limit=3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51885 - "POST /toggle-valve HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:51887 - "POST /toggle-valve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60613 - "GET /valve-state/zone1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62791 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62793 - "GET /history?limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62795 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62797 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62799 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62801 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62803 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62805 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62807 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62809 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62811 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52728 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52730 - "GET /history?limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52736 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52739 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51515 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56183 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56186 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56189 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56191 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56193 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56195 - "POST /send-data HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56197 - "GET /history?limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56199 - "POST /toggle-valve HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56201 - "GET /valve-state/zone1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58390 - "GET /history?limit=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50163 - "GET / HTTP/1.1" 200 OK
